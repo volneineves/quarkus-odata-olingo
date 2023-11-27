@@ -1,0 +1,145 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OData Service",
+    "description": "API para acessar entidades OData",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/odata/{entityType}": {
+      "get": {
+        "summary": "Recuperar entidades",
+        "description": "Recupera entidades do conjunto de entidades especificado",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "O tipo de entidade a ser recuperado (por exemplo: 'Products', 'Categories', '$metadata').",
+            "example": "Products"
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "OData Filter expression.",
+            "example": "name eq 'Produto1'"
+          },
+          {
+            "name": "$select",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "OData Select expression.",
+            "example": "name,description"
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "OData OrderBy expression.",
+            "example": "name asc,description desc"
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "O número máximo de itens a retornar.",
+            "example": 10
+          },
+          {
+            "name": "$skip",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "O número de itens a serem ignorados.",
+            "example": 5
+          },
+          {
+            "name": "$count",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Se definido como true, inclui o total de itens no resultado.",
+            "example": true
+          },
+          {
+            "name": "$expand",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "OData Expand expression para expandir relacionamentos de entidades.",
+            "example": "Category"
+          },
+          {
+            "name": "$format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["json", "xml"]
+            },
+            "description": "Formato desejado da resposta (por exemplo, 'json' ou 'xml').",
+            "example": "json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entidades recuperadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}
