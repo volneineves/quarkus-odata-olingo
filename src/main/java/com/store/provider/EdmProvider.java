@@ -1,5 +1,7 @@
 package com.store.provider;
 
+import org.apache.olingo.commons.api.data.Property;
+import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.*;
@@ -103,6 +105,9 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
         CsdlProperty id = new CsdlProperty().setName("id").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
         CsdlProperty name = new CsdlProperty().setName("name").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
         CsdlProperty description = new CsdlProperty().setName("description").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty price = new CsdlProperty().setName("price").setType(EdmPrimitiveTypeKind.Double.getFullQualifiedName());
+        CsdlProperty stockQuantity = new CsdlProperty().setName("stockQuantity").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
+        CsdlProperty category = new CsdlProperty().setName("category").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
         CsdlProperty createdAt = new CsdlProperty().setName("createdAt").setType(EdmPrimitiveTypeKind.Date.getFullQualifiedName());
         CsdlProperty updatedAt = new CsdlProperty().setName("updatedAt").setType(EdmPrimitiveTypeKind.Date.getFullQualifiedName());
 
@@ -113,7 +118,7 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
         // configure EntityType
         CsdlEntityType entityType = new CsdlEntityType();
         entityType.setName(ET_PRODUCT_NAME);
-        entityType.setProperties(List.of(id, name, description, createdAt, updatedAt));
+        entityType.setProperties(List.of(id, name, description, price, stockQuantity, category, createdAt, updatedAt));
         entityType.setKey(Collections.singletonList(propertyRef));
 
         return entityType;
