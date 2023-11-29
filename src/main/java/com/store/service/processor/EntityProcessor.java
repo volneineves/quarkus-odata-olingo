@@ -16,6 +16,8 @@ import org.apache.olingo.server.api.serializer.EntitySerializerOptions;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
 import org.apache.olingo.server.api.serializer.SerializerResult;
 import org.apache.olingo.server.api.uri.*;
+import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
+import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -86,8 +88,11 @@ public class EntityProcessor implements org.apache.olingo.server.api.processor.E
 
         validateResponseEntity(responseEntity);
 
+        ExpandOption expandOption = uriInfo.getExpandOption();
+
+        SelectOption selectOption = uriInfo.getSelectOption();
         ContextURL contextUrl = ContextURL.with().entitySet(responseEdmEntitySet).build();
-        EntitySerializerOptions opts = EntitySerializerOptions.with().contextURL(contextUrl).build();
+        EntitySerializerOptions opts = EntitySerializerOptions.with().contextURL(contextUrl).select(selectOption).expand(expandOption).build();
 
         ODataSerializer serializer = odata.createSerializer(responseFormat);
         SerializerResult serializerResult = serializer.entity(serviceMetadata, responseEdmEntityType, responseEntity, opts);
