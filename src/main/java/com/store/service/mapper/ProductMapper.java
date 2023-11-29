@@ -16,7 +16,7 @@ public class ProductMapper {
                 .addProperty(new Property(null, "description", ValueType.PRIMITIVE, product.getDescription()))
                 .addProperty(new Property(null, "price", ValueType.PRIMITIVE, product.getPrice()))
                 .addProperty(new Property(null, "stockQuantity", ValueType.PRIMITIVE, product.getStockQuantity()))
-                .addProperty(new Property(null, "category", ValueType.PRIMITIVE, product.getCategory().getName()))
+                .addProperty(new Property(null, "categoryId", ValueType.PRIMITIVE, product.getCategoryId()))
                 .addProperty(new Property(null, "createdAt", ValueType.PRIMITIVE, product.getCreatedAt()))
                 .addProperty(new Property(null, "updatedAt", ValueType.PRIMITIVE, product.getUpdatedAt()));
 

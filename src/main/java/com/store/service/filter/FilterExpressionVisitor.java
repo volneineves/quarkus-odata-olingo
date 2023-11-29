@@ -11,6 +11,8 @@ import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
 import org.apache.olingo.server.api.uri.queryoption.apply.AggregateExpression;
 import org.apache.olingo.server.api.uri.queryoption.expression.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
@@ -24,13 +26,13 @@ public class FilterExpressionVisitor implements ExpressionVisitor<Object> {
     }
 
     @Override
-    public Object visitTypeLiteral(EdmType type) throws ExpressionVisitException, ODataApplicationException {
+    public Object visitTypeLiteral(EdmType type) throws ODataApplicationException {
         throw new ODataApplicationException("Type literals are not implemented",
                 HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
     }
 
     @Override
-    public Object visitMember(Member member) throws ExpressionVisitException, ODataApplicationException {
+    public Object visitMember(Member member) throws ODataApplicationException {
         final List<UriResource> uriResourceParts = member.getResourcePath().getUriResourceParts();
 
         if (uriResourceParts.size() == 1 && uriResourceParts.get(0) instanceof UriResourcePrimitiveProperty uriResourceProperty) {
@@ -50,7 +52,16 @@ public class FilterExpressionVisitor implements ExpressionVisitor<Object> {
             }
 
             return stringLiteral;
-        } else {
+        }
+        else if (literal.getType().getFullQualifiedName().toString().equals("Edm.Decimal")) {
+            try {
+                return BigDecimal.valueOf(Double.parseDouble(literalAsString));
+            } catch (NumberFormatException e) {
+                throw new ODataApplicationException("Invalid format for Edm.Double",
+                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+            }
+        }
+        else {
             try {
                 return Integer.parseInt(literalAsString);
             } catch (NumberFormatException e) {
@@ -78,13 +89,33 @@ public class FilterExpressionVisitor implements ExpressionVisitor<Object> {
     @Override
     public Object visitMethodCall(MethodKind methodCall, List<Object> parameters) throws ODataApplicationException {
         if (methodCall == MethodKind.CONTAINS) {
-            if (parameters.get(0) instanceof String && parameters.get(1) instanceof String) {
-                String valueParam1 = (String) parameters.get(0);
-                String valueParam2 = (String) parameters.get(1);
+            if (parameters.size() == 2 && parameters.get(0) instanceof String && parameters.get(1) instanceof String) {
+                String field = (String) parameters.get(0);
+                String value = (String) parameters.get(1);
 
-                return valueParam1.contains(valueParam2);
+                return field.contains(value);
             } else {
-                throw new ODataApplicationException("Contains needs two parametes of type Edm.String",
+                throw new ODataApplicationException("Contains needs two parameters of type Edm.String",
+                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+            }
+        } else if (methodCall == MethodKind.STARTSWITH) {
+            if (parameters.size() == 2 && parameters.get(0) instanceof String && parameters.get(1) instanceof String) {
+                String field = (String) parameters.get(0);
+                String value = (String) parameters.get(1);
+
+                return field.startsWith(value);
+            } else {
+                throw new ODataApplicationException("StartsWith needs two parameters of type Edm.String",
+                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+            }
+        } else if (methodCall == MethodKind.ENDSWITH) {
+            if (parameters.size() == 2 && parameters.get(0) instanceof String && parameters.get(1) instanceof String) {
+                String field = (String) parameters.get(0);
+                String value = (String) parameters.get(1);
+
+                return field.endsWith(value);
+            } else {
+                throw new ODataApplicationException("EndsWith needs two parameters of type Edm.String",
                         HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
             }
         } else {
@@ -164,6 +195,15 @@ public class FilterExpressionVisitor implements ExpressionVisitor<Object> {
 
     private Object evaluateComparisonOperation(BinaryOperatorKind operator, Object left, Object right) throws ODataApplicationException {
 
+        if (left instanceof BigDecimal && right instanceof BigDecimal) {
+            BigDecimal leftDecimal = (BigDecimal) left;
+            BigDecimal rightDecimal = (BigDecimal) right;
+            return compareBigDecimal(operator, leftDecimal, rightDecimal);
+        }
+
+        if (left instanceof LocalDate && right instanceof LocalDate) {
+            return compareLocalDate(operator, (LocalDate) left, (LocalDate) right);
+        }
         if (left.getClass().equals(right.getClass())) {
             int result;
             if (left instanceof Integer) {
@@ -221,6 +261,35 @@ public class FilterExpressionVisitor implements ExpressionVisitor<Object> {
             }
         } else {
             throw new ODataApplicationException("Arithmetic operations needs two numeric operands", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+        }
+    }
+
+    private Boolean compareBigDecimal(BinaryOperatorKind operator, BigDecimal left, BigDecimal right) {
+        int result = left.compareTo(right);
+        return evaluateComparisonResult(operator, result);
+    }
+
+    private Boolean compareLocalDate(BinaryOperatorKind operator, LocalDate left, LocalDate right) {
+        int result = left.compareTo(right);
+        return evaluateComparisonResult(operator, result);
+    }
+
+    private Boolean evaluateComparisonResult(BinaryOperatorKind operator, int result) {
+        switch (operator) {
+            case EQ:
+                return result == 0;
+            case NE:
+                return result != 0;
+            case GE:
+                return result >= 0;
+            case GT:
+                return result > 0;
+            case LE:
+                return result <= 0;
+            case LT:
+                return result < 0;
+            default:
+                return false;
         }
     }
 

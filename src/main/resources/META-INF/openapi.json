@@ -28,7 +28,56 @@
               "type": "string"
             },
             "description": "OData Filter expression.",
-            "example": "name eq 'Produto1'"
+            "examples": {
+              "--": {
+                "summary": "--",
+                "value": ""
+              },
+              "Equal": {
+                "summary": "Equal (eq)",
+                "value": "name eq 'Produto1'"
+              },
+              "Contains": {
+                "summary": "Contains",
+                "value": "contains(name, 'Produto')"
+              },
+              "NotEqual": {
+                "summary": "Not Equal (ne)",
+                "value": "name ne 'Produto1'"
+              },
+              "GreaterThan": {
+                "summary": "Greater Than (gt)",
+                "value": "price gt 20"
+              },
+              "LessThan": {
+                "summary": "Less Than (lt)",
+                "value": "price lt 20"
+              },
+              "GreaterThanOrEqual": {
+                "summary": "Greater Than or Equal (ge)",
+                "value": "price ge 20"
+              },
+              "LessThanOrEqual": {
+                "summary": "Less Than or Equal (le)",
+                "value": "price le 20"
+              },
+              "And": {
+                "summary": "And",
+                "value": "name eq 'Produto1' and price gt 20"
+              },
+              "Or": {
+                "summary": "Or",
+                "value": "name eq 'Produto1' or name eq 'Produto2'"
+              },
+              "StartsWith": {
+                "summary": "Starts With",
+                "value": "startswith(name, 'Produto')"
+              },
+              "EndsWith": {
+                "summary": "Ends With",
+                "value": "endswith(name, '1')"
+              }
+            }
           },
           {
             "name": "$select",

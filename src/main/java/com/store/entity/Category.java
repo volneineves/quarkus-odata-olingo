@@ -5,6 +5,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "t_category")
@@ -19,6 +20,9 @@ public class Category {
 
     @Column
     private String description;
+
+    @OneToMany(mappedBy = "category")
+    private List<Product> products;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -38,6 +42,10 @@ public class Category {
 
     public String getDescription() {
         return description;
+    }
+
+    public List<Product> getProducts() {
+        return products;
     }
 
     public Date getCreatedAt() {

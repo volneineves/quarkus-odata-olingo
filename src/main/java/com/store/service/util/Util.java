@@ -4,13 +4,11 @@ package com.store.service.util;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.edm.*;
+import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
-import org.apache.olingo.server.api.uri.UriInfoResource;
-import org.apache.olingo.server.api.uri.UriParameter;
-import org.apache.olingo.server.api.uri.UriResource;
-import org.apache.olingo.server.api.uri.UriResourceEntitySet;
+import org.apache.olingo.server.api.uri.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,7 +26,6 @@ public class Util {
             throw new ODataApplicationException("Invalid resource type for first segment.",
                     HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
         }
-
         return uriResource.getEntitySet();
     }
 
@@ -118,6 +115,47 @@ public class Util {
             return new URI(entitySetName + "(" + id + ")");
         } catch (URISyntaxException e) {
             throw new ODataRuntimeException("Unable to create id for entity: " + entitySetName, e);
+        }
+    }
+
+    public static EdmEntitySet getNavigationTargetEntitySet(EdmEntitySet startEdmEntitySet, EdmNavigationProperty edmNavigationProperty)
+            throws ODataApplicationException {
+
+
+        String navPropName = edmNavigationProperty.getName();
+        EdmBindingTarget edmBindingTarget = startEdmEntitySet.getRelatedBindingTarget(navPropName);
+        if (edmBindingTarget == null) {
+            throw new ODataApplicationException("Not teste.",
+                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
+        }
+
+        if (edmBindingTarget instanceof EdmEntitySet) {
+            startEdmEntitySet = (EdmEntitySet) edmBindingTarget;
+        } else {
+            throw new ODataApplicationException("Not carlos.",
+                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
+        }
+
+        return startEdmEntitySet;
+    }
+
+    public static Long extractId(List<UriParameter> keyParams, String entityType) throws ODataApplicationException {
+        if (keyParams == null || keyParams.isEmpty()) {
+            throw new ODataApplicationException(
+                    "No key parameters provided for " + entityType,
+                    400, // HTTP Status Code for Bad Request
+                    null);
+        }
+
+        try {
+            // Assuming the ID is the first parameter and its value can be parsed to a Long
+            String idString = keyParams.get(0).getText();
+            return Long.parseLong(idString);
+        } catch (NumberFormatException e) {
+            throw new ODataApplicationException(
+                    "Invalid ID format for " + entityType + ": " + keyParams.get(0).getText(),
+                    400, // HTTP Status Code for Bad Request
+                    null);
         }
     }
 }

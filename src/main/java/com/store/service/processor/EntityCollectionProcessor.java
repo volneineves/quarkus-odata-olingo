@@ -10,6 +10,7 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
@@ -19,10 +20,7 @@ import org.apache.olingo.server.api.serializer.EntityCollectionSerializerOptions
 import org.apache.olingo.server.api.serializer.ODataSerializer;
 import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.api.serializer.SerializerResult;
-import org.apache.olingo.server.api.uri.UriInfo;
-import org.apache.olingo.server.api.uri.UriInfoResource;
-import org.apache.olingo.server.api.uri.UriResource;
-import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
+import org.apache.olingo.server.api.uri.*;
 import org.apache.olingo.server.api.uri.queryoption.*;
 import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
 import org.apache.olingo.server.api.uri.queryoption.expression.ExpressionVisitException;
@@ -54,7 +52,42 @@ public class EntityCollectionProcessor implements org.apache.olingo.server.api.p
             throws ODataApplicationException, SerializerException {
 
         EdmEntitySet edmEntitySet = Util.getEdmEntitySet(uriInfo);
-        EntityCollection entityCollection = storage.readEntitySetData(edmEntitySet);
+        EntityCollection entityCollection;
+
+        List<UriResource> resourceParts = uriInfo.getUriResourceParts();
+        int segmentCount = resourceParts.size();
+
+        UriResource uriResource = resourceParts.get(0);
+        if (! (uriResource instanceof UriResourceEntitySet uriResourceEntitySet)) {
+            throw new ODataApplicationException("Only EntitySet is supported", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),Locale.ROOT);
+        }
+
+        EdmEntitySet startEdmEntitySet = uriResourceEntitySet.getEntitySet();
+
+        // navigation
+        if (segmentCount == 1) {
+            entityCollection = storage.retrieveEntities(edmEntitySet);
+        } else if (segmentCount == 2) {
+            UriResource lastSegment = resourceParts.get(1);
+            if(lastSegment instanceof UriResourceNavigation){
+                UriResourceNavigation uriResourceNavigation = (UriResourceNavigation)lastSegment;
+                EdmNavigationProperty edmNavigationProperty = uriResourceNavigation.getProperty();
+                EdmEntityType targetEntityType = edmNavigationProperty.getType();
+                edmEntitySet = Util.getNavigationTargetEntitySet(edmEntitySet, edmNavigationProperty);
+
+                List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+                Entity sourceEntity = storage.retrieveEntity(startEdmEntitySet, keyPredicates);
+
+                if(sourceEntity == null) {
+                    throw new ODataApplicationException("Entity not found.", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ROOT);
+                }
+                entityCollection = storage.retrieveEntitiesByRelation(sourceEntity, targetEntityType);
+            } else {
+                entityCollection = storage.retrieveEntities(edmEntitySet);
+            }
+        } else {
+            throw new ODataApplicationException("Not supported", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),Locale.ENGLISH);
+        }
 
         applyFilter(uriInfo.getFilterOption(), entityCollection);
         applySystemQueryOptions(uriInfo, entityCollection);

@@ -29,15 +29,12 @@ public class OdataServlet extends HttpServlet {
 
     @Override
     public void service(HttpServletRequest req, HttpServletResponse resp) {
-        try {
-            EntityStorage storage = getOrInitializeStorage(req);
-            ODataHttpHandler handler = createODataHandler(storage);
+        EntityStorage storage = getOrInitializeStorage(req);
+        ODataHttpHandler handler = createODataHandler(storage);
 
-            // Process OData request
-            handler.process(req, resp);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Error processing OData request", e);
-        }
+        // Process OData request
+        handler.process(req, resp);
+
     }
 
     // Initialize EntityStorage in session.
@@ -64,4 +61,5 @@ public class OdataServlet extends HttpServlet {
 
         return handler;
     }
+
 }

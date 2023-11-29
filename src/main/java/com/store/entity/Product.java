@@ -6,6 +6,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @Table(name = "t_product")
@@ -27,8 +28,12 @@ public class Product {
     private Long stockQuantity;
 
     @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false, insertable = false, updatable = false)
     private Category category;
+
+    @Column(name = "category_id")
+    private Long categoryId;
+
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -60,6 +65,10 @@ public class Product {
 
     public Category getCategory() {
         return category;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
     }
 
     public Date getCreatedAt() {

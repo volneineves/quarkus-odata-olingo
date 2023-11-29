@@ -47,6 +47,7 @@ public class PrimitiveProcessor implements org.apache.olingo.server.api.processo
     public void readPrimitive(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType responseFormat)
             throws ODataApplicationException, ODataLibraryException {
         // Gets the entity set and property from the URI.
+
         EdmEntitySet edmEntitySet = getEdmEntitySet(uriInfo);
         EdmProperty edmProperty = getEdmProperty(uriInfo);
 
@@ -73,7 +74,7 @@ public class PrimitiveProcessor implements org.apache.olingo.server.api.processo
     // Gets the storage entity.
     private Entity getEntity(EdmEntitySet edmEntitySet, UriInfo uriInfo) throws ODataApplicationException {
         List<UriParameter> keyPredicates = ((UriResourceEntitySet) uriInfo.getUriResourceParts().get(0)).getKeyPredicates();
-        Entity entity = storage.readEntityData(edmEntitySet, keyPredicates);
+        Entity entity = storage.retrieveEntity(edmEntitySet, keyPredicates);
         if (entity == null) {
             throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
         }
