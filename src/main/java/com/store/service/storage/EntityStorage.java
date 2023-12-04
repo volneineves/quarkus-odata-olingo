@@ -34,7 +34,8 @@ public class EntityStorage {
     public EntityCollection retrieveEntities(EdmEntitySet edmEntitySet) throws ODataApplicationException {
         return switch (edmEntitySet.getName()) {
             case ES_PRODUCTS_NAME -> getEntityCollection(productRepository.listAll(), ProductMapper::convertToEntity);
-            case ES_CATEGORIES_NAME -> getEntityCollection(categoryRepository.listAll(), CategoryMapper::convertToEntity);
+            case ES_CATEGORIES_NAME ->
+                    getEntityCollection(categoryRepository.listAll(), CategoryMapper::convertToEntity);
             default -> throw new ODataApplicationException("Invalid Entity Set Name", 404, null);
         };
     }
@@ -46,6 +47,7 @@ public class EntityStorage {
             default -> throw new ODataApplicationException("Invalid Entity Type Name", 404, null);
         };
     }
+
     public Entity retrieveEntityByRelation(Entity sourceEntity, EdmEntityType relatedEntityType) {
         Property id = sourceEntity.getProperty("id");
 
@@ -78,11 +80,8 @@ public class EntityStorage {
         if (relatedEntityType.getName().equals(ET_PRODUCT_NAME)) {
             return findProductsByCategory((Long) id.getValue());
         }
-
-
         throw new IllegalArgumentException("Invalid Related Entity Type Name");
     }
-
 
 
     private Entity getProductEntity(List<UriParameter> keyParams) throws ODataApplicationException {
@@ -111,6 +110,7 @@ public class EntityStorage {
         Product product = productRepository.findById(productId);
         return CategoryMapper.convertToEntity(product.getCategory());
     }
+
 
     private <T> EntityCollection getEntityCollection(List<T> entities, Function<T, Entity> mapper) {
         EntityCollection collection = new EntityCollection();

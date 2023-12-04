@@ -3,11 +3,12 @@ package com.store.service.processor;
 import com.store.service.storage.EntityStorage;
 import com.store.service.util.Util;
 import jakarta.inject.Inject;
+import org.apache.olingo.commons.api.Constants;
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
-import org.apache.olingo.commons.api.edm.EdmEntitySet;
-import org.apache.olingo.commons.api.edm.EdmEntityType;
-import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.data.Link;
+import org.apache.olingo.commons.api.edm.*;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -16,6 +17,7 @@ import org.apache.olingo.server.api.serializer.EntitySerializerOptions;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
 import org.apache.olingo.server.api.serializer.SerializerResult;
 import org.apache.olingo.server.api.uri.*;
+import org.apache.olingo.server.api.uri.queryoption.ExpandItem;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
 
@@ -89,8 +91,31 @@ public class EntityProcessor implements org.apache.olingo.server.api.processor.E
         validateResponseEntity(responseEntity);
 
         ExpandOption expandOption = uriInfo.getExpandOption();
-
         SelectOption selectOption = uriInfo.getSelectOption();
+
+        if (expandOption != null) {
+            for (ExpandItem expandItem : expandOption.getExpandItems()) {
+                EdmNavigationProperty edmNavigationProperty = null;
+
+                if (expandItem.isStar()) {
+                    List<EdmNavigationPropertyBinding> navPropertyBindings = responseEdmEntitySet.getNavigationPropertyBindings();
+                    for (EdmNavigationPropertyBinding binding : navPropertyBindings) {
+                        EdmElement property = responseEdmEntityType.getProperty(binding.getPath());
+                        if (property instanceof EdmNavigationProperty) {
+                            edmNavigationProperty = (EdmNavigationProperty) property;
+                            addExpandedDataToEntity(responseEntity, edmNavigationProperty);
+                        }
+                    }
+                } else {
+                    UriResource uriResourceExpand = expandItem.getResourcePath().getUriResourceParts().get(0);
+                    if (uriResourceExpand instanceof UriResourceNavigation) {
+                        edmNavigationProperty = ((UriResourceNavigation) uriResourceExpand).getProperty();
+                        addExpandedDataToEntity(responseEntity, edmNavigationProperty);
+                    }
+                }
+            }
+        }
+
         ContextURL contextUrl = ContextURL.with().entitySet(responseEdmEntitySet).build();
         EntitySerializerOptions opts = EntitySerializerOptions.with().contextURL(contextUrl).select(selectOption).expand(expandOption).build();
 
@@ -102,6 +127,26 @@ public class EntityProcessor implements org.apache.olingo.server.api.processor.E
         response.setContent(entityStream);
         response.setStatusCode(HttpStatusCode.OK.getStatusCode());
         response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
+    }
+
+    private void addExpandedDataToEntity(Entity entity, EdmNavigationProperty edmNavigationProperty) throws ODataApplicationException {
+        String navPropName = edmNavigationProperty.getName();
+        Link link = new Link();
+        link.setTitle(navPropName);
+        link.setType(Constants.ENTITY_NAVIGATION_LINK_TYPE);
+        link.setRel(Constants.NS_ASSOCIATION_LINK_REL + navPropName);
+
+        if (edmNavigationProperty.isCollection()) {
+            EntityCollection relatedEntities = storage.retrieveEntitiesByRelation(entity, edmNavigationProperty.getType());
+            link.setInlineEntitySet(relatedEntities);
+//            link.setHref(relatedEntities.getId().toASCIIString());
+        } else {
+            Entity relatedEntity = storage.retrieveEntityByRelation(entity, edmNavigationProperty.getType());
+            link.setInlineEntity(relatedEntity);
+            link.setHref(relatedEntity.getId().toASCIIString());
+        }
+
+        entity.getNavigationLinks().add(link);
     }
 
     private static void validateResponseEntity(Entity responseEntity) throws ODataApplicationException {
