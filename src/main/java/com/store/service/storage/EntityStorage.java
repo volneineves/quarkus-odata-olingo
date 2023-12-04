@@ -85,12 +85,12 @@ public class EntityStorage {
 
 
     private Entity getProductEntity(List<UriParameter> keyParams) throws ODataApplicationException {
-        Long productId = Util.extractId(keyParams, "Product");
+        Long productId = Util.extractId(keyParams, ET_PRODUCT_NAME);
         return ProductMapper.convertToEntity(productRepository.findById(productId));
     }
 
     private Entity getCategoryEntity(List<UriParameter> keyParams) throws ODataApplicationException {
-        Long categoryId = Util.extractId(keyParams, "Category");
+        Long categoryId = Util.extractId(keyParams, ET_CATEGORY_NAME);
         return CategoryMapper.convertToEntity(categoryRepository.findById(categoryId));
     }
 

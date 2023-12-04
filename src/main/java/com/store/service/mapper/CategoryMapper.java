@@ -2,11 +2,11 @@
 package com.store.service.mapper;
 
 import com.store.entity.Category;
-import com.store.entity.Product;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 
+import static com.store.provider.EdmProvider.ES_CATEGORIES_NAME;
 import static com.store.service.util.Util.createId;
 
 public class CategoryMapper {
@@ -20,7 +20,7 @@ public class CategoryMapper {
                 .addProperty(new Property(null, "createdAt", ValueType.PRIMITIVE, category.getCreatedAt()))
                 .addProperty(new Property(null, "updatedAt", ValueType.PRIMITIVE, category.getUpdatedAt()));
 
-        entity.setId(createId("Categories", category.getId()));
+        entity.setId(createId(ES_CATEGORIES_NAME, category.getId()));
         return entity;
     }
 }

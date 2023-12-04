@@ -5,6 +5,7 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 
+import static com.store.provider.EdmProvider.ES_PRODUCTS_NAME;
 import static com.store.service.util.Util.createId;
 
 public class ProductMapper {
@@ -20,7 +21,7 @@ public class ProductMapper {
                 .addProperty(new Property(null, "createdAt", ValueType.PRIMITIVE, product.getCreatedAt()))
                 .addProperty(new Property(null, "updatedAt", ValueType.PRIMITIVE, product.getUpdatedAt()));
 
-        entity.setId(createId("Products", product.getId()));
+        entity.setId(createId(ES_PRODUCTS_NAME, product.getId()));
         return entity;
     }
 }

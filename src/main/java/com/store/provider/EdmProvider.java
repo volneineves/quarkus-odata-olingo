@@ -24,14 +24,14 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
     public static final FullQualifiedName CONTAINER = new FullQualifiedName(NAMESPACE, CONTAINER_NAME);
 
     // Entity Types Names
-    public static final String ET_PRODUCT_NAME = "Product";
-    public static final String ET_CATEGORY_NAME = "Category";
+    public static final String ET_PRODUCT_NAME = "product";
+    public static final String ET_CATEGORY_NAME = "category";
     public static final FullQualifiedName ET_PRODUCT_FQN = new FullQualifiedName(NAMESPACE, ET_PRODUCT_NAME);
     public static final FullQualifiedName ET_CATEGORY_FQN = new FullQualifiedName(NAMESPACE, ET_CATEGORY_NAME);
 
     // Entity Set Names
-    public static final String ES_PRODUCTS_NAME = "Products";
-    public static final String ES_CATEGORIES_NAME = "Categories";
+    public static final String ES_PRODUCTS_NAME = "products";
+    public static final String ES_CATEGORIES_NAME = "categories";
 
     @Override
     public CsdlEntityType getEntityType(FullQualifiedName entityTypeName) {
@@ -64,8 +64,8 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
 
         // Define navigation property binding for Products
         CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget("Categories"); // Target entitySet where the navigation property points to
-        navPropBinding.setPath("Category"); // Path from entity type to navigation property
+        navPropBinding.setTarget(ES_CATEGORIES_NAME); // Target entitySet where the navigation property points to
+        navPropBinding.setPath(ET_CATEGORY_NAME); // Path from entity type to navigation property
         entitySet.setNavigationPropertyBindings(Collections.singletonList(navPropBinding));
 
         return entitySet;
@@ -78,8 +78,8 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
 
         // Define navigation property binding for Categories
         CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget("Products"); // Target entitySet where the navigation property points to
-        navPropBinding.setPath("Products"); // Path from entity type to navigation property
+        navPropBinding.setTarget(ES_PRODUCTS_NAME); // Target entitySet where the navigation property points to
+        navPropBinding.setPath(ES_PRODUCTS_NAME); // Path from entity type to navigation property
         entitySet.setNavigationPropertyBindings(Collections.singletonList(navPropBinding));
 
         return entitySet;
@@ -143,10 +143,10 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
 
         // Navigation
         CsdlNavigationProperty navProp = new CsdlNavigationProperty()
-                .setName("Category")
+                .setName(ET_CATEGORY_NAME)
                 .setType(ET_CATEGORY_FQN)
                 .setNullable(true)
-                .setPartner("Products");
+                .setPartner(ES_PRODUCTS_NAME);
         List<CsdlNavigationProperty> navPropList = new ArrayList<>();
         navPropList.add(navProp);
 
@@ -174,10 +174,10 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
 
         // Navigation
         CsdlNavigationProperty navProp = new CsdlNavigationProperty()
-                .setName("Products")
+                .setName(ES_PRODUCTS_NAME)
                 .setType(ET_PRODUCT_FQN)
                 .setCollection(true)
-                .setPartner("Category");
+                .setPartner(ET_CATEGORY_NAME);
         List<CsdlNavigationProperty> navPropList = new ArrayList<>();
         navPropList.add(navProp);
 
