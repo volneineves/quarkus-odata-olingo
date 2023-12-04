@@ -33,119 +33,135 @@ public class FilterExpressionVisitor implements ExpressionVisitor<Object> {
 
     @Override
     public Object visitMember(Member member) throws ODataApplicationException {
-        final List<UriResource> uriResourceParts = member.getResourcePath().getUriResourceParts();
-
-        if (uriResourceParts.size() == 1 && uriResourceParts.get(0) instanceof UriResourcePrimitiveProperty uriResourceProperty) {
+        List<UriResource> uriResourceParts = member.getResourcePath().getUriResourceParts();
+        if (uriResourceParts.size() == 1 && uriResourceParts.get(0) instanceof UriResourcePrimitiveProperty) {
+            UriResourcePrimitiveProperty uriResourceProperty = (UriResourcePrimitiveProperty) uriResourceParts.get(0);
             return currentEntity.getProperty(uriResourceProperty.getProperty().getName()).getValue();
         } else {
-            throw new ODataApplicationException("Only primitive properties are implemented in filter expressions", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+            throw new ODataApplicationException("Only primitive properties are implemented in filter expressions",
+                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
         }
     }
 
     @Override
     public Object visitLiteral(Literal literal) throws ODataApplicationException {
         String literalAsString = literal.getText();
-        if (literal.getType() instanceof EdmString) {
-            String stringLiteral = "";
-            if (literal.getText().length() > 2) {
-                stringLiteral = literalAsString.substring(1, literalAsString.length() - 1);
-            }
+        EdmType type = literal.getType();
 
-            return stringLiteral;
-        }
-        else if (literal.getType().getFullQualifiedName().toString().equals("Edm.Decimal")) {
-            try {
-                return BigDecimal.valueOf(Double.parseDouble(literalAsString));
-            } catch (NumberFormatException e) {
-                throw new ODataApplicationException("Invalid format for Edm.Double",
-                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-            }
-        }
-        else {
+        if (type instanceof EdmString) {
+            return literalAsString.substring(1, literalAsString.length() - 1);
+        } else if ("Edm.Decimal".equals(type.getFullQualifiedName().toString())) {
+            return new BigDecimal(literalAsString);
+        } else {
             try {
                 return Integer.parseInt(literalAsString);
             } catch (NumberFormatException e) {
-                throw new ODataApplicationException("Only Edm.Int32 and Edm.String literals are implemented",
-                        HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+                throw new ODataApplicationException("Invalid numeric format",
+                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
             }
         }
     }
 
-    public Object visitUnaryOperator(UnaryOperatorKind operator, Object operand)
-            throws ODataApplicationException {
-
+    @Override
+    public Object visitUnaryOperator(UnaryOperatorKind operator, Object operand) throws ODataApplicationException {
         if (operator == UnaryOperatorKind.NOT && operand instanceof Boolean) {
-            // boolean negation
             return !(Boolean) operand;
         } else if (operator == UnaryOperatorKind.MINUS && operand instanceof Integer) {
-            // arithmetic minus
             return -(Integer) operand;
+        } else {
+            throw new ODataApplicationException("Invalid type for unary operator",
+                    HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
         }
-
-        throw new ODataApplicationException("Invalid type for unary operator",
-                HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
     }
 
     @Override
     public Object visitMethodCall(MethodKind methodCall, List<Object> parameters) throws ODataApplicationException {
-        if (methodCall == MethodKind.CONTAINS) {
-            if (parameters.size() == 2 && parameters.get(0) instanceof String && parameters.get(1) instanceof String) {
-                String field = (String) parameters.get(0);
-                String value = (String) parameters.get(1);
+        if (parameters.size() != 2 || !(parameters.get(0) instanceof String) || !(parameters.get(1) instanceof String)) {
+            throw new ODataApplicationException("Method " + methodCall + " needs two parameters of type Edm.String",
+                    HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+        }
 
+        String field = (String) parameters.get(0);
+        String value = (String) parameters.get(1);
+
+        switch (methodCall) {
+            case CONTAINS:
                 return field.contains(value);
-            } else {
-                throw new ODataApplicationException("Contains needs two parameters of type Edm.String",
-                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-            }
-        } else if (methodCall == MethodKind.STARTSWITH) {
-            if (parameters.size() == 2 && parameters.get(0) instanceof String && parameters.get(1) instanceof String) {
-                String field = (String) parameters.get(0);
-                String value = (String) parameters.get(1);
-
+            case STARTSWITH:
                 return field.startsWith(value);
-            } else {
-                throw new ODataApplicationException("StartsWith needs two parameters of type Edm.String",
-                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-            }
-        } else if (methodCall == MethodKind.ENDSWITH) {
-            if (parameters.size() == 2 && parameters.get(0) instanceof String && parameters.get(1) instanceof String) {
-                String field = (String) parameters.get(0);
-                String value = (String) parameters.get(1);
-
+            case ENDSWITH:
                 return field.endsWith(value);
-            } else {
-                throw new ODataApplicationException("EndsWith needs two parameters of type Edm.String",
-                        HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-            }
-        } else {
-            throw new ODataApplicationException("Method call " + methodCall + " not implemented",
-                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+            default:
+                throw new ODataApplicationException("Method call " + methodCall + " not implemented",
+                        HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
         }
     }
 
     @Override
     public Object visitBinaryOperator(BinaryOperatorKind operator, Object left, Object right) throws ExpressionVisitException, ODataApplicationException {
-        if (operator == BinaryOperatorKind.ADD
-                || operator == BinaryOperatorKind.MOD
-                || operator == BinaryOperatorKind.MUL
-                || operator == BinaryOperatorKind.DIV
-                || operator == BinaryOperatorKind.SUB) {
-            return evaluateArithmeticOperation(operator, left, right);
-        } else if (operator == BinaryOperatorKind.EQ
-                || operator == BinaryOperatorKind.NE
-                || operator == BinaryOperatorKind.GE
-                || operator == BinaryOperatorKind.GT
-                || operator == BinaryOperatorKind.LE
-                || operator == BinaryOperatorKind.LT) {
-            return evaluateComparisonOperation(operator, left, right);
-        } else if (operator == BinaryOperatorKind.AND
-                || operator == BinaryOperatorKind.OR) {
-            return evaluateBooleanOperation(operator, left, right);
+        if (left instanceof Integer && right instanceof Integer) {
+            return evaluateArithmeticOperation(operator, (Integer) left, (Integer) right);
+        } else if (left instanceof Boolean && right instanceof Boolean) {
+            return evaluateBooleanOperation(operator, (Boolean) left, (Boolean) right);
         } else {
-            throw new ODataApplicationException("Binary operation " + operator.name() + " is not implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+            return evaluateComparisonOperation(operator, left, right);
         }
     }
+
+    private Object evaluateArithmeticOperation(BinaryOperatorKind operator, Integer left, Integer right) throws ODataApplicationException {
+        return switch (operator) {
+            case ADD -> left + right;
+            case SUB -> left - right;
+            case MUL -> left * right;
+            case DIV -> {
+                if (right == 0) {
+                    throw new ODataApplicationException("Division by zero is not allowed",
+                            HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+                }
+                yield left / right;
+            }
+            case MOD -> left % right;
+            default -> throw new ODataApplicationException("Arithmetic operation not supported",
+                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+        };
+    }
+
+    private Object evaluateBooleanOperation(BinaryOperatorKind operator, Boolean left, Boolean right) throws ODataApplicationException {
+        return switch (operator) {
+            case AND -> left && right;
+            case OR -> left || right;
+            default -> throw new ODataApplicationException("Boolean operation not supported",
+                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object evaluateComparisonOperation(BinaryOperatorKind operator, Object left, Object right) throws ODataApplicationException {
+        if (!left.getClass().equals(right.getClass())) {
+            throw new ODataApplicationException("Comparison operands must be of the same type",
+                    HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+        }
+
+        if (!(left instanceof Comparable<?> && right instanceof Comparable<?>)) {
+            throw new ODataApplicationException("Both operands must be Comparable",
+                    HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+        }
+
+        Comparable<Object> comparableLeft = (Comparable<Object>) left;
+        int comparisonResult = comparableLeft.compareTo(right);
+
+        return switch (operator) {
+            case EQ -> comparisonResult == 0;
+            case NE -> comparisonResult != 0;
+            case GT -> comparisonResult > 0;
+            case GE -> comparisonResult >= 0;
+            case LT -> comparisonResult < 0;
+            case LE -> comparisonResult <= 0;
+            default -> throw new ODataApplicationException("Comparison operation not supported",
+                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+        };
+    }
+
 
     @Override
     public Object visitLambdaExpression(String lambdaFunction, String lambdaVariable, Expression expression) throws ExpressionVisitException, ODataApplicationException {
@@ -170,131 +186,5 @@ public class FilterExpressionVisitor implements ExpressionVisitor<Object> {
     @Override
     public Object visitBinaryOperator(BinaryOperatorKind operator, Object left, List<Object> right) throws ExpressionVisitException, ODataApplicationException {
         return null;
-    }
-
-    private Object evaluateBooleanOperation(BinaryOperatorKind operator, Object left, Object right)
-            throws ODataApplicationException {
-
-        // First check that both operands are of type Boolean
-        if (left instanceof Boolean && right instanceof Boolean) {
-            Boolean valueLeft = (Boolean) left;
-            Boolean valueRight = (Boolean) right;
-
-            // Than calculate the result value
-            if (operator == BinaryOperatorKind.AND) {
-                return valueLeft && valueRight;
-            } else {
-                // OR
-                return valueLeft || valueRight;
-            }
-        } else {
-            throw new ODataApplicationException("Boolean operations needs two numeric operands",
-                    HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-        }
-    }
-
-    private Object evaluateComparisonOperation(BinaryOperatorKind operator, Object left, Object right) throws ODataApplicationException {
-
-        if (left instanceof BigDecimal && right instanceof BigDecimal) {
-            BigDecimal leftDecimal = (BigDecimal) left;
-            BigDecimal rightDecimal = (BigDecimal) right;
-            return compareBigDecimal(operator, leftDecimal, rightDecimal);
-        }
-
-        if (left instanceof LocalDate && right instanceof LocalDate) {
-            return compareLocalDate(operator, (LocalDate) left, (LocalDate) right);
-        }
-        if (left.getClass().equals(right.getClass())) {
-            int result;
-            if (left instanceof Integer) {
-                result = ((Comparable<Integer>) (Integer) left).compareTo((Integer) right);
-            } else if (left instanceof String) {
-                result = ((Comparable<String>) (String) left).compareTo((String) right);
-            } else if (left instanceof Boolean) {
-                result = ((Comparable<Boolean>) (Boolean) left).compareTo((Boolean) right);
-            } else {
-                throw new ODataApplicationException("Class " + left.getClass().getCanonicalName() + " not expected",
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
-            }
-
-            if (operator == BinaryOperatorKind.EQ) {
-                return result == 0;
-            } else if (operator == BinaryOperatorKind.NE) {
-                return result != 0;
-            } else if (operator == BinaryOperatorKind.GE) {
-                return result >= 0;
-            } else if (operator == BinaryOperatorKind.GT) {
-                return result > 0;
-            } else if (operator == BinaryOperatorKind.LE) {
-                return result <= 0;
-            } else {
-                // BinaryOperatorKind.LT
-                return result < 0;
-            }
-
-        } else {
-            throw new ODataApplicationException("Comparison needs two equal types",
-                    HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-        }
-    }
-
-    private Object evaluateArithmeticOperation(BinaryOperatorKind operator, Object left,
-                                               Object right) throws ODataApplicationException {
-
-        // First check if the type of both operands is numerical
-        if (left instanceof Integer && right instanceof Integer) {
-            Integer valueLeft = (Integer) left;
-            Integer valueRight = (Integer) right;
-
-            // Than calculate the result value
-            if (operator == BinaryOperatorKind.ADD) {
-                return valueLeft + valueRight;
-            } else if (operator == BinaryOperatorKind.SUB) {
-                return valueLeft - valueRight;
-            } else if (operator == BinaryOperatorKind.MUL) {
-                return valueLeft * valueRight;
-            } else if (operator == BinaryOperatorKind.DIV) {
-                return valueLeft / valueRight;
-            } else {
-                // BinaryOperatorKind,MOD
-                return valueLeft % valueRight;
-            }
-        } else {
-            throw new ODataApplicationException("Arithmetic operations needs two numeric operands", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
-        }
-    }
-
-    private Boolean compareBigDecimal(BinaryOperatorKind operator, BigDecimal left, BigDecimal right) {
-        int result = left.compareTo(right);
-        return evaluateComparisonResult(operator, result);
-    }
-
-    private Boolean compareLocalDate(BinaryOperatorKind operator, LocalDate left, LocalDate right) {
-        int result = left.compareTo(right);
-        return evaluateComparisonResult(operator, result);
-    }
-
-    private Boolean evaluateComparisonResult(BinaryOperatorKind operator, int result) {
-        switch (operator) {
-            case EQ:
-                return result == 0;
-            case NE:
-                return result != 0;
-            case GE:
-                return result >= 0;
-            case GT:
-                return result > 0;
-            case LE:
-                return result <= 0;
-            case LT:
-                return result < 0;
-            default:
-                return false;
-        }
-    }
-
-    @Override
-    public Object visitComputeAggregate(AggregateExpression aggregateExpr) throws ExpressionVisitException, ODataApplicationException {
-        return ExpressionVisitor.super.visitComputeAggregate(aggregateExpr);
     }
 }
