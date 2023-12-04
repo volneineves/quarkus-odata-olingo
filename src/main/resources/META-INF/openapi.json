@@ -14,12 +14,12 @@
           {
             "name": "entityType",
             "in": "path",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             },
             "description": "O tipo de entidade a ser recuperado (por exemplo: 'Products', 'Categories', '$metadata').",
-            "example": "Products"
+            "example": "Categories(1)"
           },
           {
             "name": "$filter",
