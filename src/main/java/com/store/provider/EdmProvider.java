@@ -1,18 +1,14 @@
 package com.store.provider;
 
-import org.apache.olingo.commons.api.data.Entity;
-import org.apache.olingo.commons.api.data.Property;
-import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.*;
-import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 public class EdmProvider extends CsdlAbstractEdmProvider {
 
@@ -25,21 +21,21 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
 
     // Entity Types Names
     public static final String ET_PRODUCT_NAME = "product";
-    public static final String ET_CATEGORY_NAME = "category";
+    public static final String ET_CLIENT_NAME = "client";
     public static final FullQualifiedName ET_PRODUCT_FQN = new FullQualifiedName(NAMESPACE, ET_PRODUCT_NAME);
-    public static final FullQualifiedName ET_CATEGORY_FQN = new FullQualifiedName(NAMESPACE, ET_CATEGORY_NAME);
+    public static final FullQualifiedName ET_CLIENT_FQN = new FullQualifiedName(NAMESPACE, ET_CLIENT_NAME);
 
     // Entity Set Names
     public static final String ES_PRODUCTS_NAME = "products";
-    public static final String ES_CATEGORIES_NAME = "categories";
+    public static final String ES_CLIENT_NAME = "clients";
 
     @Override
     public CsdlEntityType getEntityType(FullQualifiedName entityTypeName) {
 
         if (entityTypeName.equals(ET_PRODUCT_FQN)) {
             return prepareProductEntityType();
-        } else if (entityTypeName.equals(ET_CATEGORY_FQN)) {
-            return prepareCategoryEntityType();
+        } else if (entityTypeName.equals(ET_CLIENT_FQN)) {
+            return prepareClientEntityType();
         }
 
         return null;
@@ -50,8 +46,8 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
         if (entityContainer.equals(CONTAINER)) {
             if (entitySetName.equals(ES_PRODUCTS_NAME)) {
                 return createProductsEntitySet();
-            } else if (entitySetName.equals(ES_CATEGORIES_NAME)) {
-                return createCategoriesEntitySet();
+            } else if (entitySetName.equals(ES_CLIENT_NAME)) {
+                return createClientsEntitySet();
             }
         }
         return null;
@@ -61,27 +57,13 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
         CsdlEntitySet entitySet = new CsdlEntitySet();
         entitySet.setName(ES_PRODUCTS_NAME);
         entitySet.setType(ET_PRODUCT_FQN);
-
-        // Define navigation property binding for Products
-        CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget(ES_CATEGORIES_NAME); // Target entitySet where the navigation property points to
-        navPropBinding.setPath(ET_CATEGORY_NAME); // Path from entity type to navigation property
-        entitySet.setNavigationPropertyBindings(Collections.singletonList(navPropBinding));
-
         return entitySet;
     }
 
-    private CsdlEntitySet createCategoriesEntitySet() {
+    private CsdlEntitySet createClientsEntitySet() {
         CsdlEntitySet entitySet = new CsdlEntitySet();
-        entitySet.setName(ES_CATEGORIES_NAME);
-        entitySet.setType(ET_CATEGORY_FQN);
-
-        // Define navigation property binding for Categories
-        CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget(ES_PRODUCTS_NAME); // Target entitySet where the navigation property points to
-        navPropBinding.setPath(ES_PRODUCTS_NAME); // Path from entity type to navigation property
-        entitySet.setNavigationPropertyBindings(Collections.singletonList(navPropBinding));
-
+        entitySet.setName(ES_CLIENT_NAME);
+        entitySet.setType(ET_CLIENT_FQN);
         return entitySet;
     }
 
@@ -89,7 +71,7 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
     public CsdlEntityContainer getEntityContainer() throws ODataApplicationException {
         List<CsdlEntitySet> entitySets = new ArrayList<>();
         entitySets.add(getEntitySet(CONTAINER, ES_PRODUCTS_NAME));
-        entitySets.add(getEntitySet(CONTAINER, ES_CATEGORIES_NAME));
+        entitySets.add(getEntitySet(CONTAINER, ES_CLIENT_NAME));
 
         CsdlEntityContainer entityContainer = new CsdlEntityContainer();
         entityContainer.setName(CONTAINER_NAME);
@@ -104,7 +86,7 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
 
         List<CsdlEntityType> entityTypes = new ArrayList<>();
         entityTypes.add(getEntityType(ET_PRODUCT_FQN));
-        entityTypes.add(getEntityType(ET_CATEGORY_FQN));
+        entityTypes.add(getEntityType(ET_CLIENT_FQN));
         schema.setEntityTypes(entityTypes);
 
         schema.setEntityContainer(getEntityContainer());
@@ -127,67 +109,101 @@ public class EdmProvider extends CsdlAbstractEdmProvider {
     }
 
     private static CsdlEntityType prepareProductEntityType() {
-        // create EntityType properties
-        CsdlProperty id = new CsdlProperty().setName("id").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-        CsdlProperty name = new CsdlProperty().setName("name").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-        CsdlProperty description = new CsdlProperty().setName("description").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-        CsdlProperty price = new CsdlProperty().setName("price").setType(EdmPrimitiveTypeKind.Double.getFullQualifiedName());
-        CsdlProperty stockQuantity = new CsdlProperty().setName("stockQuantity").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-        CsdlProperty categoryId = new CsdlProperty().setName("categoryId").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-        CsdlProperty createdAt = new CsdlProperty().setName("createdAt").setType(EdmPrimitiveTypeKind.Date.getFullQualifiedName());
-        CsdlProperty updatedAt = new CsdlProperty().setName("updatedAt").setType(EdmPrimitiveTypeKind.Date.getFullQualifiedName());
+        // Create EntityType properties
+        CsdlProperty productSK = new CsdlProperty().setName("productSK").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
+        CsdlProperty productCode = new CsdlProperty().setName("productCode").setType(EdmPrimitiveTypeKind.Double.getFullQualifiedName());
+        CsdlProperty currentProductDescription = new CsdlProperty().setName("currentProductDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty productName = new CsdlProperty().setName("productName").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentProductName = new CsdlProperty().setName("currentProductName").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSubAssortment = new CsdlProperty().setName("currentSubAssortment").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSupplierCode = new CsdlProperty().setName("currentSupplierCode").setType(EdmPrimitiveTypeKind.Double.getFullQualifiedName());
+        CsdlProperty currentSupplierSwitchDescription = new CsdlProperty().setName("currentSupplierSwitchDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSSFSupplierSwitch = new CsdlProperty().setName("currentSSFSupplierSwitch").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentBrandDescription = new CsdlProperty().setName("currentBrandDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentEANBarcodeCode = new CsdlProperty().setName("currentEANBarcodeCode").setType(EdmPrimitiveTypeKind.Double.getFullQualifiedName());
+        CsdlProperty eanBarcodeCode = new CsdlProperty().setName("eanBarcodeCode").setType(EdmPrimitiveTypeKind.Double.getFullQualifiedName());
+        CsdlProperty currentMonitoredIndicator = new CsdlProperty().setName("currentMonitoredIndicator").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentImportedIndicator = new CsdlProperty().setName("currentImportedIndicator").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentOriginCode = new CsdlProperty().setName("currentOriginCode").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
+        CsdlProperty currentCommercialCategoryDescription = new CsdlProperty().setName("currentCommercialCategoryDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentCommercialCategory = new CsdlProperty().setName("currentCommercialCategory").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSeasonalityDescription = new CsdlProperty().setName("currentSeasonalityDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentStorageConditionCode = new CsdlProperty().setName("currentStorageConditionCode").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentBrandTreeDescription = new CsdlProperty().setName("currentBrandTreeDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentWholesaleBuyer = new CsdlProperty().setName("currentWholesaleBuyer").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentPriceGroupCode = new CsdlProperty().setName("currentPriceGroupCode").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
+        CsdlProperty currentPriceCurveCode = new CsdlProperty().setName("currentPriceCurveCode").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty supplierSwitchSK = new CsdlProperty().setName("supplierSwitchSK").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
+        CsdlProperty currentWholesaleCoordinator = new CsdlProperty().setName("currentWholesaleCoordinator").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentRetailCoordinator = new CsdlProperty().setName("currentRetailCoordinator").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
 
-        // create CsdlPropertyRef for key element
+        // Create CsdlPropertyRef for key element
         CsdlPropertyRef propertyRef = new CsdlPropertyRef();
-        propertyRef.setName("id");
+        propertyRef.setName("productSK");
 
-        // Navigation
-        CsdlNavigationProperty navProp = new CsdlNavigationProperty()
-                .setName(ET_CATEGORY_NAME)
-                .setType(ET_CATEGORY_FQN)
-                .setNullable(true)
-                .setPartner(ES_PRODUCTS_NAME);
-        List<CsdlNavigationProperty> navPropList = new ArrayList<>();
-        navPropList.add(navProp);
-
-        // configure EntityType
+        // Configure EntityType
         CsdlEntityType entityType = new CsdlEntityType();
         entityType.setName(ET_PRODUCT_NAME);
-        entityType.setProperties(List.of(id, name, description, price, stockQuantity, categoryId, createdAt, updatedAt));
+        entityType.setProperties(Arrays.asList(
+                productSK, productCode, currentProductDescription, productName, currentProductName,
+                currentSubAssortment, currentSupplierCode, currentSupplierSwitchDescription, currentSSFSupplierSwitch,
+                currentBrandDescription, currentEANBarcodeCode, eanBarcodeCode, currentMonitoredIndicator,
+                currentImportedIndicator, currentOriginCode, currentCommercialCategoryDescription,
+                currentCommercialCategory, currentSeasonalityDescription, currentStorageConditionCode,
+                currentBrandTreeDescription, currentWholesaleBuyer, currentPriceGroupCode,
+                currentPriceCurveCode, supplierSwitchSK, currentWholesaleCoordinator, currentRetailCoordinator
+        ));
         entityType.setKey(Collections.singletonList(propertyRef));
-        entityType.setNavigationProperties(navPropList);
 
         return entityType;
     }
 
-    private static CsdlEntityType prepareCategoryEntityType() {
-        // create EntityType properties
-        CsdlProperty id = new CsdlProperty().setName("id").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-        CsdlProperty name = new CsdlProperty().setName("name").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-        CsdlProperty description = new CsdlProperty().setName("description").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-        CsdlProperty createdAt = new CsdlProperty().setName("createdAt").setType(EdmPrimitiveTypeKind.Date.getFullQualifiedName());
-        CsdlProperty updatedAt = new CsdlProperty().setName("updatedAt").setType(EdmPrimitiveTypeKind.Date.getFullQualifiedName());
 
-        // create CsdlPropertyRef for key element
+    private static CsdlEntityType prepareClientEntityType() {
+        // Create EntityType properties
+        CsdlProperty clientSK = new CsdlProperty().setName("clientSK").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
+        CsdlProperty clientCode = new CsdlProperty().setName("clientCode").setType(EdmPrimitiveTypeKind.Double.getFullQualifiedName());
+        CsdlProperty currentClient = new CsdlProperty().setName("currentClient").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentNetwork = new CsdlProperty().setName("currentNetwork").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentAssociation = new CsdlProperty().setName("currentAssociation").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty clientState = new CsdlProperty().setName("clientState").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSector = new CsdlProperty().setName("currentSector").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSupervisor = new CsdlProperty().setName("currentSupervisor").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentManagerDescription = new CsdlProperty().setName("currentManagerDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentManager = new CsdlProperty().setName("currentManager").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentDivisionalDescription = new CsdlProperty().setName("currentDivisionalDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSuperintendenceDescription = new CsdlProperty().setName("currentSuperintendenceDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentNeighborhood = new CsdlProperty().setName("currentNeighborhood").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty lastPurchaseDate = new CsdlProperty().setName("lastPurchaseDate").setType(EdmPrimitiveTypeKind.Date.getFullQualifiedName());
+        CsdlProperty sapGroupCode = new CsdlProperty().setName("sapGroupCode").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentSapGroupCode = new CsdlProperty().setName("currentSapGroupCode").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentMicroRegion = new CsdlProperty().setName("currentMicroRegion").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentCNPJCPF = new CsdlProperty().setName("currentCNPJCPF").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentMesoRegion = new CsdlProperty().setName("currentMesoRegion").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentClientSegmentationDescription = new CsdlProperty().setName("currentClientSegmentationDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentClientGroupTermDescription = new CsdlProperty().setName("currentClientGroupTermDescription").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty currentControlledIndicator = new CsdlProperty().setName("currentControlledIndicator").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+        CsdlProperty activeRegistrationIndicator = new CsdlProperty().setName("activeRegistrationIndicator").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
+
+        // Create CsdlPropertyRef for key element
         CsdlPropertyRef propertyRef = new CsdlPropertyRef();
-        propertyRef.setName("id");
+        propertyRef.setName("clientSK");
 
-        // Navigation
-        CsdlNavigationProperty navProp = new CsdlNavigationProperty()
-                .setName(ES_PRODUCTS_NAME)
-                .setType(ET_PRODUCT_FQN)
-                .setCollection(true)
-                .setPartner(ET_CATEGORY_NAME);
-        List<CsdlNavigationProperty> navPropList = new ArrayList<>();
-        navPropList.add(navProp);
-
-        // configure EntityType
+        // Configure EntityType
         CsdlEntityType entityType = new CsdlEntityType();
-        entityType.setName(ET_CATEGORY_NAME);
-        entityType.setProperties(List.of(id, name, description, createdAt, updatedAt));
+        entityType.setName(ET_CLIENT_NAME);
+        entityType.setProperties(Arrays.asList(
+                clientSK, clientCode, currentClient, currentNetwork, currentAssociation,
+                clientState, currentSector, currentSupervisor, currentManagerDescription,
+                currentManager, currentDivisionalDescription, currentSuperintendenceDescription,
+                currentNeighborhood, lastPurchaseDate, sapGroupCode, currentSapGroupCode,
+                currentMicroRegion, currentCNPJCPF, currentMesoRegion,
+                currentClientSegmentationDescription, currentClientGroupTermDescription,
+                currentControlledIndicator, activeRegistrationIndicator
+        ));
         entityType.setKey(Collections.singletonList(propertyRef));
-        entityType.setNavigationProperties(navPropList);
 
         return entityType;
     }
+
 }

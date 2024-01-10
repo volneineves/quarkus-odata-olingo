@@ -62,29 +62,10 @@ public class EntityCollectionProcessor implements org.apache.olingo.server.api.p
             throw new ODataApplicationException("Only EntitySet is supported", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),Locale.ROOT);
         }
 
-        EdmEntitySet startEdmEntitySet = uriResourceEntitySet.getEntitySet();
-
-        // navigation
         if (segmentCount == 1) {
             entityCollection = storage.retrieveEntities(edmEntitySet);
         } else if (segmentCount == 2) {
-            UriResource lastSegment = resourceParts.get(1);
-            if(lastSegment instanceof UriResourceNavigation){
-                UriResourceNavigation uriResourceNavigation = (UriResourceNavigation)lastSegment;
-                EdmNavigationProperty edmNavigationProperty = uriResourceNavigation.getProperty();
-                EdmEntityType targetEntityType = edmNavigationProperty.getType();
-                edmEntitySet = Util.getNavigationTargetEntitySet(edmEntitySet, edmNavigationProperty);
-
-                List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
-                Entity sourceEntity = storage.retrieveEntity(startEdmEntitySet, keyPredicates);
-
-                if(sourceEntity == null) {
-                    throw new ODataApplicationException("Entity not found.", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ROOT);
-                }
-                entityCollection = storage.retrieveEntitiesByRelation(sourceEntity, targetEntityType);
-            } else {
-                entityCollection = storage.retrieveEntities(edmEntitySet);
-            }
+            entityCollection = storage.retrieveEntities(edmEntitySet);
         } else {
             throw new ODataApplicationException("Not supported", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),Locale.ENGLISH);
         }

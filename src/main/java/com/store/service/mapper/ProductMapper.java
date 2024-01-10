@@ -12,16 +12,34 @@ public class ProductMapper {
 
     public static Entity convertToEntity(Product product) {
         Entity entity = new Entity()
-                .addProperty(new Property(null, "id", ValueType.PRIMITIVE, product.getId()))
-                .addProperty(new Property(null, "name", ValueType.PRIMITIVE, product.getName()))
-                .addProperty(new Property(null, "description", ValueType.PRIMITIVE, product.getDescription()))
-                .addProperty(new Property(null, "price", ValueType.PRIMITIVE, product.getPrice()))
-                .addProperty(new Property(null, "stockQuantity", ValueType.PRIMITIVE, product.getStockQuantity()))
-                .addProperty(new Property(null, "categoryId", ValueType.PRIMITIVE, product.getCategoryId()))
-                .addProperty(new Property(null, "createdAt", ValueType.PRIMITIVE, product.getCreatedAt()))
-                .addProperty(new Property(null, "updatedAt", ValueType.PRIMITIVE, product.getUpdatedAt()));
+                .addProperty(new Property(null, "productSK", ValueType.PRIMITIVE, product.getProductSK()))
+                .addProperty(new Property(null, "productCode", ValueType.PRIMITIVE, product.getProductCode()))
+                .addProperty(new Property(null, "currentProductDescription", ValueType.PRIMITIVE, product.getCurrentProductDescription()))
+                .addProperty(new Property(null, "productName", ValueType.PRIMITIVE, product.getProductName()))
+                .addProperty(new Property(null, "currentProductName", ValueType.PRIMITIVE, product.getCurrentProductName()))
+                .addProperty(new Property(null, "currentSubAssortment", ValueType.PRIMITIVE, product.getCurrentSubAssortment()))
+                .addProperty(new Property(null, "currentSupplierCode", ValueType.PRIMITIVE, product.getCurrentSupplierCode()))
+                .addProperty(new Property(null, "currentSupplierSwitchDescription", ValueType.PRIMITIVE, product.getCurrentSupplierSwitchDescription()))
+                .addProperty(new Property(null, "currentSSFSupplierSwitch", ValueType.PRIMITIVE, product.getCurrentSSFSupplierSwitch()))
+                .addProperty(new Property(null, "currentBrandDescription", ValueType.PRIMITIVE, product.getCurrentBrandDescription()))
+                .addProperty(new Property(null, "currentEANBarcodeCode", ValueType.PRIMITIVE, product.getCurrentEANBarcodeCode()))
+                .addProperty(new Property(null, "eanBarcodeCode", ValueType.PRIMITIVE, product.getEanBarcodeCode()))
+                .addProperty(new Property(null, "currentMonitoredIndicator", ValueType.PRIMITIVE, product.getCurrentMonitoredIndicator()))
+                .addProperty(new Property(null, "currentImportedIndicator", ValueType.PRIMITIVE, product.getCurrentImportedIndicator()))
+                .addProperty(new Property(null, "currentOriginCode", ValueType.PRIMITIVE, product.getCurrentOriginCode()))
+                .addProperty(new Property(null, "currentCommercialCategoryDescription", ValueType.PRIMITIVE, product.getCurrentCommercialCategoryDescription()))
+                .addProperty(new Property(null, "currentCommercialCategory", ValueType.PRIMITIVE, product.getCurrentCommercialCategory()))
+                .addProperty(new Property(null, "currentSeasonalityDescription", ValueType.PRIMITIVE, product.getCurrentSeasonalityDescription()))
+                .addProperty(new Property(null, "currentStorageConditionCode", ValueType.PRIMITIVE, product.getCurrentStorageConditionCode()))
+                .addProperty(new Property(null, "currentBrandTreeDescription", ValueType.PRIMITIVE, product.getCurrentBrandTreeDescription()))
+                .addProperty(new Property(null, "currentWholesaleBuyer", ValueType.PRIMITIVE, product.getCurrentWholesaleBuyer()))
+                .addProperty(new Property(null, "currentPriceGroupCode", ValueType.PRIMITIVE, product.getCurrentPriceGroupCode()))
+                .addProperty(new Property(null, "currentPriceCurveCode", ValueType.PRIMITIVE, product.getCurrentPriceCurveCode()))
+                .addProperty(new Property(null, "supplierSwitchSK", ValueType.PRIMITIVE, product.getSupplierSwitchSK()))
+                .addProperty(new Property(null, "currentWholesaleCoordinator", ValueType.PRIMITIVE, product.getCurrentWholesaleCoordinator()))
+                .addProperty(new Property(null, "currentRetailCoordinator", ValueType.PRIMITIVE, product.getCurrentRetailCoordinator()));
 
-        entity.setId(createId(ES_PRODUCTS_NAME, product.getId()));
+        entity.setId(createId(ES_PRODUCTS_NAME, product.getProductSK()));
         return entity;
     }
 }

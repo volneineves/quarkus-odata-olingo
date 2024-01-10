@@ -1,81 +1,192 @@
 package com.store.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.math.BigDecimal;
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
-@Table(name = "t_product")
+@Table(name = "produto")
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    @Column(name = "skProduto") // TODO validar primary key
+    private Long productSK;
 
-    @Column(nullable = false, length = 50)
-    private String name;
+    @Column(name = "Cód Produto")
+    private Double productCode;
 
-    private String description;
+    @Column(name = "Desc Produto (Atual)")
+    private String currentProductDescription;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+    @Column(name = "Produto")
+    private String productName;
 
-    @Column(nullable = false)
-    private Long stockQuantity;
+    @Column(name = "Produto (Atual)")
+    private String currentProductName;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false, insertable = false, updatable = false)
-    private Category category;
+    @Column(name = "SubSortimento (Atual)")
+    private String currentSubAssortment;
 
-    @Column(name = "category_id")
-    private Long categoryId;
+    @Column(name = "Cód Fornecedor (Atual)")
+    private Double currentSupplierCode;
 
+    @Column(name = "Desc Chaveamento Fornecedor (Atual)")
+    private String currentSupplierSwitchDescription;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private Date createdAt;
+    @Column(name = "SSF Chaveamento Fornecedor (Atual)")
+    private String currentSSFSupplierSwitch;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private Date updatedAt;
+    @Column(name = "Desc Marca (Atual)")
+    private String currentBrandDescription;
 
-    public Long getId() {
-        return id;
+    @Column(name = "Cód Barra EAN (Atual)")
+    private Double currentEANBarcodeCode;
+
+    @Column(name = "Cód Barra EAN")
+    private Double eanBarcodeCode;
+
+    @Column(name = "Indicador Monitorado (Atual)")
+    private String currentMonitoredIndicator;
+
+    @Column(name = "Indicador Importado (Atual)")
+    private String currentImportedIndicator;
+
+    @Column(name = "Cód Origem (Atual)")
+    private Long currentOriginCode;
+
+    @Column(name = "Desc Categoria Comercial (Atual)")
+    private String currentCommercialCategoryDescription;
+
+    @Column(name = "Categoria Comercial (Atual)")
+    private String currentCommercialCategory;
+
+    @Column(name = "Desc Sazonalidade (Atual)")
+    private String currentSeasonalityDescription;
+
+    @Column(name = "Cód Condição Estocagem (Atual)")
+    private String currentStorageConditionCode;
+
+    @Column(name = "Desc Marca Arvore Mercadológica (Atual)")
+    private String currentBrandTreeDescription;
+
+    @Column(name = "Comprador Atacado (Atual)")
+    private String currentWholesaleBuyer;
+
+    @Column(name = "Cód Grupo Preço (Atual)")
+    private Long currentPriceGroupCode;
+
+    @Column(name = "Cód Curva Preço (Atual)")
+    private String currentPriceCurveCode;
+
+    @Column(name = "skChaveamentoFornecedor")
+    private Long supplierSwitchSK;
+
+    @Column(name = "Coordenador Atacado (Atual)")
+    private String currentWholesaleCoordinator;
+
+    @Column(name = "Coordenador Varejo (Atual)")
+    private String currentRetailCoordinator;
+
+    public Long getProductSK() {
+        return productSK;
     }
 
-    public String getName() {
-        return name;
+    public Double getProductCode() {
+        return productCode;
     }
 
-    public String getDescription() {
-        return description;
+    public String getCurrentProductDescription() {
+        return currentProductDescription;
     }
 
-    public BigDecimal getPrice() {
-        return price;
+    public String getProductName() {
+        return productName;
     }
 
-    public Long getStockQuantity() {
-        return stockQuantity;
+    public String getCurrentProductName() {
+        return currentProductName;
     }
 
-    public Category getCategory() {
-        return category;
+    public String getCurrentSubAssortment() {
+        return currentSubAssortment;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public Double getCurrentSupplierCode() {
+        return currentSupplierCode;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
+    public String getCurrentSupplierSwitchDescription() {
+        return currentSupplierSwitchDescription;
     }
 
-    public Date getUpdatedAt() {
-        return updatedAt;
+    public String getCurrentSSFSupplierSwitch() {
+        return currentSSFSupplierSwitch;
+    }
+
+    public String getCurrentBrandDescription() {
+        return currentBrandDescription;
+    }
+
+    public Double getCurrentEANBarcodeCode() {
+        return currentEANBarcodeCode;
+    }
+
+    public Double getEanBarcodeCode() {
+        return eanBarcodeCode;
+    }
+
+    public String getCurrentMonitoredIndicator() {
+        return currentMonitoredIndicator;
+    }
+
+    public String getCurrentImportedIndicator() {
+        return currentImportedIndicator;
+    }
+
+    public Long getCurrentOriginCode() {
+        return currentOriginCode;
+    }
+
+    public String getCurrentCommercialCategoryDescription() {
+        return currentCommercialCategoryDescription;
+    }
+
+    public String getCurrentCommercialCategory() {
+        return currentCommercialCategory;
+    }
+
+    public String getCurrentSeasonalityDescription() {
+        return currentSeasonalityDescription;
+    }
+
+    public String getCurrentStorageConditionCode() {
+        return currentStorageConditionCode;
+    }
+
+    public String getCurrentBrandTreeDescription() {
+        return currentBrandTreeDescription;
+    }
+
+    public String getCurrentWholesaleBuyer() {
+        return currentWholesaleBuyer;
+    }
+
+    public Long getCurrentPriceGroupCode() {
+        return currentPriceGroupCode;
+    }
+
+    public String getCurrentPriceCurveCode() {
+        return currentPriceCurveCode;
+    }
+
+    public Long getSupplierSwitchSK() {
+        return supplierSwitchSK;
+    }
+
+    public String getCurrentWholesaleCoordinator() {
+        return currentWholesaleCoordinator;
+    }
+
+    public String getCurrentRetailCoordinator() {
+        return currentRetailCoordinator;
     }
 }
